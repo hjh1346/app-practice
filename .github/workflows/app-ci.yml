@@ -35,7 +35,7 @@ jobs:
             pip install .
           fi
 
-          pip install pytest
+          pip install pytest pytest-asyncio httpx aiosqlite fakeredis
 
       - name: Run pytest
         run: |
