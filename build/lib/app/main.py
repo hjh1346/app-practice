@@ -2,17 +2,9 @@ import uuid
 
 import structlog
 from fastapi import FastAPI, Request
-from fastapi.exceptions import RequestValidationError
-from sqlalchemy.exc import IntegrityError
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.common.errors import DomainError
-from app.common.exception_handlers import (
-    domainErrorHandler,
-    integrityErrorHandler,
-    unhandledErrorHandler,
-    validationErrorHandler,
-)
+from app.common.exception_handlers import installExceptionHandlers
 from app.common.logging import configureLogging
 from app.routers import auth, health, users
 from app.settings import settings
@@ -49,8 +41,13 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
         finally:
             structlog.contextvars.clear_contextvars()
 
+
 app.add_middleware(RequestIdMiddleware)
-installExceptionHandlers(app)
+app.add_exception_handler(DomainError, domainErrorHandler)
+app.add_exception_handler(RequestValidationError, validationErrorHandler)
+app.add_exception_handler(IntegrityError, integrityErrorHandler)
+app.add_exception_handler(Exception, unhandledErrorHandler)
+
 
 app.include_router(health.router)
 app.include_router(auth.router)
